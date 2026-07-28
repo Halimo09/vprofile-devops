@@ -1,0 +1,25 @@
+persistence:
+  enabled: true
+  size: 20Gi
+storageClass: gp2
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+service:
+  type: ClusterIP
+  port: 3306
+
+image:
+  repository: 652978908501.dkr.ecr.eu-central-1.amazonaws.com/vprofile/database
+  tag: latest
+  pullPolicy: IfNotPresent
+
+auth:
+  rootPassword: root123
+  database: accounts
+  username: admin
+  password: admin123

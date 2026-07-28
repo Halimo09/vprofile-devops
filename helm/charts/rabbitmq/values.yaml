@@ -1,0 +1,21 @@
+image:
+  repository: 652978908501.dkr.ecr.eu-central-1.amazonaws.com/vprofile/rabbitmq
+  tag: latest
+replicaCount: 1
+service:
+  type: ClusterIP
+  amqpPort: 5672
+  managementPort: 15672
+auth:
+  username: guest
+  password: changeMe
+persistence:
+  enabled: true
+  size: 8Gi
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

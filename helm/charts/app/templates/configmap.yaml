@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app.fullname" . }}-config
+data:
+  DB_HOST: vprofile-database
+  DB_PORT: "3306"
+  DB_NAME: accounts
+  MEMCACHED_HOST: vprofile-memcached
+  MEMCACHED_PORT: "11211"
+  RABBITMQ_HOST: vprofile-rabbitmq
+  RABBITMQ_PORT: "5672"
+  ELASTICSEARCH_HOST: localhost
+  ELASTICSEARCH_PORT: "9300"
+  ELASTICSEARCH_CLUSTER: vprofile
+  ELASTICSEARCH_NODE: vprofilenode

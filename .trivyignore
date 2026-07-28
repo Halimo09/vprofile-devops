@@ -1,0 +1,8 @@
+# Vulnerabilities accepted for this project.
+# One CVE per line, each with a comment stating WHY it is accepted and who
+# reviewed it. An entry without a justification is a finding, not a decision.
+#
+# Example:
+# CVE-2016-1000027  # Spring HttpInvoker deserialisation - class not used by this
+#                   # application, no fix available for the Spring 5.x / javax line.
+#                   # Reviewed: 2026-07-28

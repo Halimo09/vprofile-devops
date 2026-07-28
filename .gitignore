@@ -1,0 +1,42 @@
+# ---- Terraform ----
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+# note: .terraform.lock.hcl IS committed on purpose
+
+# ---- Secrets / local values ----
+*.auto.tfvars
+secrets/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# ---- Maven ----
+source/target/
+target/
+
+# ---- Kube / Helm local state ----
+.kube/
+helm/**/charts/*.tgz.bak
+
+# ---- CI artifacts ----
+trivy-reports/
+rendered-manifests.yaml
+
+# ---- Editors / OS ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+**/.terraform/
+terraform.zip

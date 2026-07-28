@@ -1,0 +1,23 @@
+# Only source/ and docker/ are needed to build the images.
+.git
+.gitignore
+.github
+terraform/
+bootstrap/
+*.tfstate
+*.tfstate.*
+docs/
+scripts/
+k8s-checks/
+helm/
+kubernetes/
+jenkins/
+source/target/
+trivy-reports/
+rendered-manifests.yaml
+*.tar.gz
+*.zip
+*.log
+Makefile
+README.md
+LICENSE

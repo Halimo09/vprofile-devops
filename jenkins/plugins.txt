@@ -1,0 +1,26 @@
+# Plugins required by the Jenkinsfile in this repository.
+# Install via Manage Jenkins > Plugins, or with jenkins-plugin-cli.
+
+# --- pipeline core ---
+workflow-aggregator
+pipeline-stage-view
+pipeline-utility-steps
+
+# --- scm ---
+git
+github
+github-branch-source
+
+# --- required by the Jenkinsfile options block ---
+ansicolor
+timestamper
+
+# --- quality gate ---
+sonar
+
+# --- credentials ---
+credentials-binding
+
+# --- optional but useful ---
+blueocean
+docker-workflow

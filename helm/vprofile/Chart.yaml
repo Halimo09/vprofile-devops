@@ -1,0 +1,22 @@
+apiVersion: v2
+name: vprofile
+description: Umbrella chart
+type: application
+version: 0.1.0
+
+dependencies:
+  - name: app
+    version: 0.1.0
+    repository: "file://../charts/app"
+
+  - name: database
+    version: 0.1.0
+    repository: "file://../charts/database"
+
+  - name: rabbitmq
+    version: 0.1.0
+    repository: "file://../charts/rabbitmq"
+
+  - name: memcached
+    version: 0.1.0
+    repository: "file://../charts/memcached"

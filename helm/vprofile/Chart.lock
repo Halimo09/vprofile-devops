@@ -1,0 +1,15 @@
+dependencies:
+- name: app
+  repository: file://../charts/app
+  version: 0.1.0
+- name: database
+  repository: file://../charts/database
+  version: 0.1.0
+- name: rabbitmq
+  repository: file://../charts/rabbitmq
+  version: 0.1.0
+- name: memcached
+  repository: file://../charts/memcached
+  version: 0.1.0
+digest: sha256:1aa5d361e718c94196e3bb3fa3bf75a9b741655e85c9261032e5f46afdee5fed
+generated: "2026-07-21T11:53:22.450035881+03:00"

@@ -1,0 +1,12 @@
+app:
+  enabled: true
+database:
+  enabled: true
+rabbitmq:
+  enabled: true
+memcached:
+  enabled: true
+
+global:
+  imagePullSecrets: []
+  storageClass: gp2

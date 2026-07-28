@@ -1,0 +1,20 @@
+replicaCount: 2
+image:
+  repository: 652978908501.dkr.ecr.eu-central-1.amazonaws.com/vprofile/app
+  tag: latest
+service:
+  type: ClusterIP
+  port: 8080
+ingress:
+  enabled: false
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
