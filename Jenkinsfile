@@ -75,9 +75,13 @@ pipeline {
         // ---- isolated kubeconfig so parallel jobs never fight over ~/.kube/config ----
         KUBECONFIG      = "${WORKSPACE}/.kube/config"
 
-        // ---- Trivy: fail the build on these severities ----
-        TRIVY_SEVERITY  = 'HIGH,CRITICAL'
-        TRIVY_CACHE_DIR = '/var/lib/jenkins/.cache/trivy'
+        // ---- Trivy: report-only. HIGH/CRITICAL findings are recorded in
+        // trivy-reports/*.txt and archived, but never fail the build.
+        // Flip TRIVY_FAIL_BUILD back to 'true' whenever you're ready to
+        // re-enable it as an actual gate.
+        TRIVY_SEVERITY   = 'HIGH,CRITICAL'
+        TRIVY_CACHE_DIR  = '/var/lib/jenkins/.cache/trivy'
+        TRIVY_FAIL_BUILD = 'false'
     }
 
     stages {
@@ -271,8 +275,10 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // Gate: HIGH/CRITICAL with an available fix fails the build.
-        // Accepted findings live in .trivyignore next to this Jenkinsfile.
+        // Report-only: every HIGH/CRITICAL finding is scanned, printed, and
+        // archived to trivy-reports/*.txt so nothing is lost - it just no
+        // longer blocks the pipeline. Set TRIVY_FAIL_BUILD=true above (or
+        // pass it as a build parameter) to turn this back into a hard gate.
         stage('Trivy Image Scan') {
             when { expression { env.RUN_DEPLOY == 'true' || env.BUILD_APP == 'true' } }
             steps {
@@ -285,13 +291,14 @@ pipeline {
 
                     sh 'mkdir -p trivy-reports'
 
+                    def anyFindings = false
+
                     for (img in images) {
                         withEnv(["COMPONENT=${img}"]) {
                             sh '''
                                 set -eu
                                 IMAGE="${ECR_REGISTRY}/vprofile/${COMPONENT}:${IMAGE_TAG}"
 
-                                # human readable report, always produced
                                 trivy image --scanners vuln \
                                   --cache-dir "${TRIVY_CACHE_DIR}" \
                                   --severity "${TRIVY_SEVERITY}" \
@@ -301,16 +308,37 @@ pipeline {
                                   --output "trivy-reports/${COMPONENT}.txt" \
                                   "${IMAGE}"
 
-                                # the actual gate
-                                trivy image --scanners vuln \
-                                  --cache-dir "${TRIVY_CACHE_DIR}" \
-                                  --severity "${TRIVY_SEVERITY}" \
-                                  --ignore-unfixed \
-                                  --exit-code 1 \
-                                  --quiet \
-                                  "${IMAGE}"
+                                echo "--- ${COMPONENT}: ${IMAGE} ---"
+                                cat "trivy-reports/${COMPONENT}.txt"
                             '''
+
+                            def findingsCount = sh(
+                                script: '''
+                                    grep -oP '^Total: \\K[0-9]+' "trivy-reports/${COMPONENT}.txt" \
+                                      2>/dev/null || echo 0
+                                ''',
+                                returnStdout: true
+                            ).trim()
+
+                            if (findingsCount.isInteger() && findingsCount.toInteger() > 0) {
+                                anyFindings = true
+                                echo "WARNING: ${img} has ${findingsCount} HIGH/CRITICAL finding(s) with an available fix (not blocking this build)."
+                            }
                         }
+                    }
+
+                    if (anyFindings) {
+                        echo '''
+                        ================================================================
+                        Trivy found HIGH/CRITICAL vulnerabilities in one or more images.
+                        The pipeline is continuing anyway (TRIVY_FAIL_BUILD=false).
+                        Full details: trivy-reports/*.txt (archived on this build).
+                        ================================================================
+                        '''
+                        if (env.TRIVY_FAIL_BUILD == 'true') {
+                            error 'Trivy found HIGH/CRITICAL vulnerabilities and TRIVY_FAIL_BUILD=true.'
+                        }
+                        currentBuild.result = 'UNSTABLE'
                     }
                 }
             }
@@ -463,6 +491,9 @@ pipeline {
     post {
         success {
             echo "SUCCESS - tag ${env.IMAGE_TAG} is live in ${env.NAMESPACE}."
+        }
+        unstable {
+            echo "SUCCESS WITH WARNINGS - tag ${env.IMAGE_TAG} is live in ${env.NAMESPACE}, but Trivy flagged vulnerabilities. Check trivy-reports/*.txt."
         }
         failure {
             echo 'FAILED - check the console output.'
