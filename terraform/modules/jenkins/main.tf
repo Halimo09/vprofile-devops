@@ -41,6 +41,19 @@ resource "aws_security_group" "jenkins" {
     cidr_blocks = var.admin_cidrs
   }
 
+  # Sonar and Jenkins are co-located on this same instance. The webhook
+  # SonarQube fires back to Jenkins after each analysis travels out via the
+  # instance's private IP - SonarQube rejects localhost/loopback URLs as an
+  # SSRF guard, so private-IP is the only option. Belt-and-suspenders: don't
+  # rely on undocumented same-instance SG behavior, allow it explicitly.
+  ingress {
+    description = "Jenkins webhook receiver (self - SonarQube runs on the same host)"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    self        = true
+  }
+
   # GitHub webhook delivery. Empty list = webhooks disabled (use SCM polling).
   dynamic "ingress" {
     for_each = length(var.github_webhook_cidrs) > 0 ? [1] : []
@@ -159,6 +172,17 @@ resource "aws_instance" "jenkins" {
 
   # Replace the instance when the bootstrap script changes.
   user_data_replace_on_change = true
+
+  # AWS republishes a new al2023 AMI every few weeks. Without this, every
+  # `terraform apply` re-resolves data.aws_ssm_parameter.al2023_ami to
+  # whatever is newest that day, sees a diff against state, and destroys +
+  # recreates this instance - wiping Jenkins and SonarQube in the process.
+  # Ignoring drift here means the instance keeps running on the AMI it was
+  # created with; to deliberately roll it onto a newer AMI later, remove
+  # this block for one apply (or `terraform taint` the resource).
+  lifecycle {
+    ignore_changes = [ami]
+  }
 
   root_block_device {
     volume_size           = var.root_volume_size
