@@ -286,11 +286,38 @@ Open the ALB address shown above in a browser — you should land on the VProfil
 
 Prometheus, Grafana, and Alertmanager are deployed via Terraform (`terraform/modules/monitoring`) into the `monitoring` namespace, with node-level and pod-level metrics collected automatically across the whole cluster — no changes to the application are required.
 
+**Prometheus is actively scraping every workload in the cluster** — the app, the database, RabbitMQ, Memcached, the control plane, and its own monitoring stack, all reporting `UP`:
+
+![Prometheus target health](docs/images/prometheus-targets-health.png)
+
+**Cluster-wide resource usage in Grafana**, broken down by namespace (`vprofile`, `monitoring`, `kube-system`):
+
+![Grafana cluster overview](docs/images/grafana-cluster-overview.png)
+
+**Zooming into the `vprofile` namespace specifically** — live CPU/memory for the actual application Pods (`vprofile-app`, `vprofile-database`, `vprofile-rabbitmq`, `vprofile-memcached`):
+
+![Grafana vprofile namespace](docs/images/grafana-vprofile-namespace.png)
+
+### Accessing it
+
+The quickest way in, no DNS setup required:
+
+```bash
+aws eks update-kubeconfig --region eu-central-1 --name vprofile-dev-eks
+kubectl port-forward -n monitoring svc/kps-grafana 3000:80
+```
+
+Open `http://localhost:3000` and log in with:
+- **Username:** `admin`
+- **Password:** `terraform output -raw grafana_admin_password`
+
+For access without a local tunnel (e.g. to share it), the Grafana Ingress is also reachable through its ALB:
+
 ```bash
 kubectl get ingress -n monitoring kps-grafana
 ```
 
-Log in with the `admin_vp` account and the password from `terraform output -raw grafana_admin_password`.
+Since no real DNS is pointed at it yet, that ALB only responds to the `Host: grafana.vprofile.local` header — either curl it directly with `-H`, or map that hostname to the ALB's address in your local hosts file for normal browser access.
 
 ---
 
@@ -313,3 +340,8 @@ This project is under active hardening. Currently known gaps:
 - [ ] Application dependencies are current as of this writing, but the app targets `javax.*`/Spring 5.x rather than the newer Jakarta/Spring 6+ line — a larger migration to track separately.
 
 ---
+
+#author 
+Mahmoud AbdelHalim 
+mahmoud.abdelhalim000@gmail.com
+
